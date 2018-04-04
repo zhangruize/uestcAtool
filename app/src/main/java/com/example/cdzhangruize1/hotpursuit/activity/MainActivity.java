@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
         model.links.add("http://www.new1.uestc.edu.cn/?n=UestcNews.Front.Category.Page&CatId=67");
         model.xpathMaps.put("#Degas_news_list > ul > li:nth-child($) > h3 > a", "title");
         model.xpathMaps.put("#Degas_news_list > ul > li:nth-child($) > p", "message");
-        Engine engine = new Engine(this);
+        Engine engine = new Engine();
         engine.setModel(model);
         engine.setmLoadCallback(new Engine.LoadCallback() {
             @Override

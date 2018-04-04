@@ -10,20 +10,51 @@ import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Engine {
     LoadCallback mLoadCallback;
     BaseScraperModel mModel;
-    WebView mWebView;
 
-    public class MyJavaScriptInterface {
-        @JavascriptInterface
-        public void showHTML(String html) {
+    public Engine() {
+    }
+
+    public void setModel(BaseScraperModel mModel) {
+        this.mModel = mModel;
+    }
+
+    public void load() {
+        mWorkThread.start();
+    }
+
+    public void setmLoadCallback(LoadCallback mLoadCallback) {
+        this.mLoadCallback = mLoadCallback;
+    }
+
+    public interface LoadCallback {
+        void onSucceed(ArrayList<HashMap<String, String>> data);
+
+        void onFailed();
+    }
+
+    private Thread mWorkThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            String url = mModel.links.get(0);
+            try {
+                Document d = Jsoup.connect(url).get();
+                processDocument(d);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void processDocument(Document d) {
             ArrayList<HashMap<String, String>> dataResult = new ArrayList<>();
-            Document d = Jsoup.parse(html);
             for (String path : mModel.xpathMaps.keySet()) {
                 String mapTo = mModel.xpathMaps.get(path);
                 boolean needBreak = false;
@@ -31,8 +62,8 @@ public class Engine {
                 while (!needBreak) {
                     String sel = path.replace("$", count + "");
                     Element e = d.selectFirst(sel);
-                    if (e.text() != null) {
-                        String value = e.text().trim();
+                    if (e != null && e.childNodeSize() > 0 && e.childNode(0) instanceof TextNode) {
+                        String value = ((TextNode) e.childNode(0)).text().trim();
                         if (dataResult.size() < count) {
                             dataResult.add(new HashMap<String, String>());
                         }
@@ -47,36 +78,5 @@ public class Engine {
                 mLoadCallback.onSucceed(dataResult);
             }
         }
-    }
-
-    public Engine(Context context) {
-        mWebView = new WebView(context);
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.addJavascriptInterface(new MyJavaScriptInterface(), "HTMLOUT");
-        mWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                mWebView.loadUrl("javascript:HTMLOUT.showHTML" +
-                        "('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');");
-            }
-        });
-    }
-
-    public void setModel(BaseScraperModel mModel) {
-        this.mModel = mModel;
-    }
-
-    public void load() {
-        mWebView.loadUrl(mModel.links.get(0));
-    }
-
-    public void setmLoadCallback(LoadCallback mLoadCallback) {
-        this.mLoadCallback = mLoadCallback;
-    }
-
-    public interface LoadCallback {
-        void onSucceed(ArrayList<HashMap<String, String>> data);
-
-        void onFailed();
-    }
+    });
 }
