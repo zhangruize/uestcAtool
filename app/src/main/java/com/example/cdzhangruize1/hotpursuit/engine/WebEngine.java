@@ -1,10 +1,5 @@
 package com.example.cdzhangruize1.hotpursuit.engine;
 
-import android.content.Context;
-import android.webkit.JavascriptInterface;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
 
 import org.jsoup.Jsoup;
@@ -16,18 +11,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Engine {
+public class WebEngine {
     LoadCallback mLoadCallback;
-    BaseScraperModel mModel;
+    BaseScraperModel mScraperModel;
 
-    public Engine() {
+    public WebEngine() {
     }
 
-    public void setModel(BaseScraperModel mModel) {
-        this.mModel = mModel;
-    }
-
-    public void load() {
+    public void load(BaseScraperModel model) {//todo 我们或许应该在每一次Load都开启一次新的线程任务。可以支持并发load
+        mScraperModel = model;
         mWorkThread.start();
     }
 
@@ -44,7 +36,7 @@ public class Engine {
     private Thread mWorkThread = new Thread(new Runnable() {
         @Override
         public void run() {
-            String url = mModel.links.get(0);
+            String url = mScraperModel.links.get(0);
             try {
                 Document d = Jsoup.connect(url).get();
                 processDocument(d);
@@ -55,8 +47,8 @@ public class Engine {
 
         private void processDocument(Document d) {
             ArrayList<HashMap<String, String>> dataResult = new ArrayList<>();
-            for (String path : mModel.xpathMaps.keySet()) {
-                String mapTo = mModel.xpathMaps.get(path);
+            for (String path : mScraperModel.xpathMaps.keySet()) {
+                String mapTo = mScraperModel.xpathMaps.get(path);
                 boolean needBreak = false;
                 int count = 1;
                 while (!needBreak) {
