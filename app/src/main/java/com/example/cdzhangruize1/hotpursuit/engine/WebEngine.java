@@ -24,6 +24,8 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.*;
+
 public class WebEngine {
     private ObservableEmitter<LoadTask> mEmitter;
 
@@ -37,10 +39,10 @@ public class WebEngine {
         }).observeOn(Schedulers.computation()).flatMap(new Function<LoadTask, ObservableSource<LoadTask>>() {
             @Override
             public ObservableSource<LoadTask> apply(LoadTask loadTask) throws Exception {
-                String url = loadTask.model.links.get(0);
+                String url = loadTask.model.getLinks().get(0);
                 try {
                     Document d = Jsoup.connect(url).get();
-                    loadTask.processDocument(d);
+                    loadTask.processDocument(d, url);
                     loadTask.generateRecyclerView();
                 } catch (IOException e) {
                     loadTask.callback.onFailed();
@@ -83,22 +85,39 @@ public class WebEngine {
             this.context = context;
         }
 
-        public void processDocument(Document d) {
+        public void processDocument(Document d, String link) {
             data.clear();
-            for (String path : model.xpathMaps.keySet()) {
-                String mapTo = model.xpathMaps.get(path);
+            for (MapRule mapRule : model.getMapRules()) {
+                String selector = mapRule.selector;
+                String name = mapRule.name;
                 boolean needBreak = false;
                 int count = 1;
                 while (!needBreak) {
-                    String sel = path.replace("$", count + "");
+                    String sel = selector.replace("$", count + "");
                     Element e = d.selectFirst(sel);
-                    if (e != null && e.childNodeSize() > 0 && e.childNode(0) instanceof TextNode) {
-                        String value = ((TextNode) e.childNode(0)).text().trim();
+                    String value = null;
+                    switch (mapRule.type) {
+                        case INNER_HTML:
+                            if (e != null && e.childNodeSize() > 0 && e.childNode(0) instanceof TextNode) {
+                                value = ((TextNode) e.childNode(0)).text().trim();
+                            }
+                            break;
+                        case SRC:
+                            if (e != null) {
+                                String src = e.attributes().get("src").trim();
+                                if (!src.startsWith("http")) {
+                                    value = link.substring(0, link.lastIndexOf('/')) +
+                                            (src.startsWith("/") ? "" : "/") + src;
+                                }
+                            }
+                            break;
+                    }
+                    if (value != null) {
                         if (data.size() < count) {
                             data.add(new HashMap<String, String>());
                         }
-                        data.get(count - 1).put(mapTo, value);
-                    } else {
+                        data.get(count - 1).put(name, value);
+                    } else if (count >= data.size()) {
                         needBreak = true;
                     }
                     count++;

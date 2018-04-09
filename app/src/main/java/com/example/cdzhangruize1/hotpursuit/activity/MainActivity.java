@@ -12,6 +12,10 @@ import com.example.cdzhangruize1.hotpursuit.engine.ListEngine;
 import com.example.cdzhangruize1.hotpursuit.engine.WebEngine;
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
 
+import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.*;
+import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.Type.INNER_HTML;
+import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.Type.SRC;
+
 public class MainActivity extends AppCompatActivity {
     WebEngine mWebEngine = new WebEngine();
     ListEngine mListEngine = new ListEngine();
@@ -41,9 +45,10 @@ public class MainActivity extends AppCompatActivity {
 
     private BaseScraperModel createTestModel() {
         BaseScraperModel model = new BaseScraperModel();
-        model.links.add("http://www.new1.uestc.edu.cn/?n=UestcNews.Front.Category.Page&CatId=67");
-        model.xpathMaps.put("#Degas_news_list > ul > li:nth-child($) > h3 > a", "title");
-        model.xpathMaps.put("#Degas_news_list > ul > li:nth-child($) > p", "message");
+        model.addLink("http://www.new1.uestc.edu.cn/?n=UestcNews.Front.Category.Page&CatId=67");
+        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > h3 > a", "title", INNER_HTML));
+        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > p", "message", INNER_HTML));
+        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > a > img", "pic", SRC));
         return model;
     }
 }
