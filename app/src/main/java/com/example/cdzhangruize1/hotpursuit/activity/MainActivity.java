@@ -13,8 +13,8 @@ import com.example.cdzhangruize1.hotpursuit.engine.WebEngine;
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
 
 import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.*;
-import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.Type.INNER_HTML;
-import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.Type.SRC;
+import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.ELEMENT_TYPE_INNERHTML;
+import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.ELEMENT_TYPE_SRC;
 
 public class MainActivity extends AppCompatActivity {
     WebEngine mWebEngine = new WebEngine();
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        mWebEngine.load(createTestModel(), mListEngine, this, new WebEngine.LoadCallback2() {
+        mWebEngine.load(createTestModel2(), mListEngine, this, new WebEngine.LoadCallback2() {
             @Override
             public void onSucceed(RecyclerView view) {
                 ((ViewGroup) findViewById(R.id.container)).addView(view,
@@ -43,12 +43,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private BaseScraperModel createTestModel() {
-        BaseScraperModel model = new BaseScraperModel();
+    private BaseScraperModel createTestModel1() {
+        BaseScraperModel model = new BaseScraperModel("文化活动", null, MODEL_TYPE_SCRAPER, 1);
         model.addLink("http://www.new1.uestc.edu.cn/?n=UestcNews.Front.Category.Page&CatId=67");
-        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > h3 > a", "title", INNER_HTML));
-        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > p", "message", INNER_HTML));
-        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > a > img", "pic", SRC));
+        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > h3 > a", "title", ELEMENT_TYPE_INNERHTML));
+        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > p", "message", ELEMENT_TYPE_INNERHTML));
+        model.addMapRule(new MapRule("#Degas_news_list > ul > li:nth-child($) > a > img", "pic", ELEMENT_TYPE_SRC));
+        return model;
+    }
+
+    private BaseScraperModel createTestModel2() {
+        BaseScraperModel model = new BaseScraperModel("微博", null, MODEL_TYPE_JSON, 0);
+        model.addLink("https://m.weibo.cn/api/container/getIndex?containerid=1076031793285524");
+        model.addMapRule(new MapRule("['data'].['cards'][$]['mblog']['user']['screen_name']", "title"));
+        model.addMapRule(new MapRule("['data'].['cards'][$]['mblog']['text']", "message"));
+        model.addMapRule(new MapRule("['data'].['cards'][$]['mblog']['original_pic']", "pic"));
         return model;
     }
 }
