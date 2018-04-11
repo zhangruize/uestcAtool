@@ -17,11 +17,9 @@ public class BaseScraperModel {
     private ArrayList<String> links = new ArrayList<>();
     private ArrayList<MapRule> xpathMaps = new ArrayList<>();
 
-    private boolean subscribe = true;
-
-    public BaseScraperModel(String name, String icon, int type) {
-        this(name, icon, type, 0);
-    }
+    //客户端使用变量，服务器不需要保存
+    private boolean subscribe = false;
+    private boolean isNew = false;//如果客户端之前没有此模型的订阅设置，则表明此模型是新的。
 
     public BaseScraperModel(String name, String icon, int type, int fromIndex) {
         this.name = name;
@@ -58,6 +56,30 @@ public class BaseScraperModel {
         return name;
     }
 
+    public int getFromIndex() {
+        return fromIndex;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public boolean isSubscribe() {
+        return subscribe;
+    }
+
+    public void setSubscribe(boolean subscribe) {
+        this.subscribe = subscribe;
+    }
+
+    public void setIsNew(boolean isNew) {
+        this.isNew = isNew;
+    }
+
+    public boolean isNew() {
+        return isNew;
+    }
+
     public static class MapRule {
         public String selector;
         public String name;
@@ -76,21 +98,5 @@ public class BaseScraperModel {
             this.name = name;
             this.type = type;
         }
-    }
-
-    public int getFromIndex() {
-        return fromIndex;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    public boolean isSubscribe() {
-        return subscribe;
-    }
-
-    public void setSubscribe(boolean subscribe) {
-        this.subscribe = subscribe;
     }
 }

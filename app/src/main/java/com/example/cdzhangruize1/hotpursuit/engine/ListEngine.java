@@ -1,11 +1,11 @@
 package com.example.cdzhangruize1.hotpursuit.engine;
 
-import com.example.cdzhangruize1.hotpursuit.model.BaseListStyle;
-import com.example.cdzhangruize1.hotpursuit.model.ListStyle1;
-
 import android.content.Context;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+
+import com.example.cdzhangruize1.hotpursuit.model.BaseListStyle;
+import com.example.cdzhangruize1.hotpursuit.model.ListStyle1;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,8 +13,16 @@ import java.util.HashMap;
 public class ListEngine {
     private int mCurrentStyleIndex = 0;
     private ArrayList<BaseListStyle> mStyles = new ArrayList<>();
+    private static ListEngine sInstance;
 
-    public ListEngine() {
+    public static ListEngine getInstance() {
+        if (sInstance == null) {
+            sInstance = new ListEngine();
+        }
+        return sInstance;
+    }
+
+    private ListEngine() {
         init();
     }
 
@@ -22,7 +30,7 @@ public class ListEngine {
         mStyles.add(new ListStyle1());
     }
 
-    public RecyclerView load(ArrayList<HashMap<String, String>> data, Context context) {
+    public RecyclerView generateView(ArrayList<HashMap<String, String>> data, Context context) {
         RecyclerView list = new RecyclerView(context);
         BasicListAdapter adapter = new BasicListAdapter(nextStyle());
         adapter.setData(data);
