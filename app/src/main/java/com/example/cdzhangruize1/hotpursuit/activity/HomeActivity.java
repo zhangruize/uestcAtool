@@ -17,7 +17,7 @@ import com.example.cdzhangruize1.hotpursuit.utils.ScraperModelUtils;
 import java.util.ArrayList;
 
 public class HomeActivity extends AppCompatActivity implements ScraperModelUtils.Callback {
-
+    private static final int REQUEST_SETTING_ACTIVITY = 1;
     private HomeFragmentAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
     private TabLayout tabLayout;
@@ -28,12 +28,7 @@ public class HomeActivity extends AppCompatActivity implements ScraperModelUtils
         setContentView(R.layout.activity_home);
 
         initView();
-        ArrayList<BaseScraperModel> localData = ScraperModelUtils.getInstance(this).getLocalScraperModels();
-        if (localData == null) {
-            ScraperModelUtils.getInstance(this).getRemoteScraperModels(this);
-        } else {
-            onSucceed(localData);
-        }
+        fetchData();
     }
 
     private void initView() {
@@ -51,6 +46,14 @@ public class HomeActivity extends AppCompatActivity implements ScraperModelUtils
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
     }
 
+    private void fetchData() {
+        ArrayList<BaseScraperModel> localData = ScraperModelUtils.getInstance(this).getLocalScraperModels();
+        if (localData == null) {
+            ScraperModelUtils.getInstance(this).getRemoteScraperModels(this);
+        } else {
+            onSucceed(localData);
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -70,16 +73,49 @@ public class HomeActivity extends AppCompatActivity implements ScraperModelUtils
 
     private void toSettingActivity() {
         Intent intent = new Intent(this, SettingsActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, REQUEST_SETTING_ACTIVITY);
     }
 
     @Override
     public void onSucceed(ArrayList<BaseScraperModel> data) {
+        if (data != null && data.size() > 0) {
+            for (int i = 0; i < data.size(); i++) {
+                if (!data.get(i).isSubscribe()) {
+                    data.remove(i);
+                    i--;
+                }
+            }
+        }
+        if (data == null || data.size() == 0) {
+            refreshTabs(data);
+        }
+        refreshTabs(data);
         mSectionsPagerAdapter.dispatchData(data);
+
+    }
+
+    private void refreshTabs(ArrayList<BaseScraperModel> data) {
+        tabLayout.removeAllTabs();
+        if (data != null) {
+            for (BaseScraperModel model : data) {
+                TabLayout.Tab tab = tabLayout.newTab();
+                tab.setText(model.getName());
+                tabLayout.addTab(tab);
+            }
+        }
     }
 
     @Override
     public void onFailed() {
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_SETTING_ACTIVITY:
+                fetchData();
+                break;
+        }
     }
 }

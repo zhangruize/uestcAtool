@@ -33,9 +33,9 @@ public class ScraperModelUtils {
 
     public ArrayList<BaseScraperModel> getLocalScraperModels() {
         if (mData == null) {
-            mData = new ArrayList<>();
             String json = mPreferences.getString(KEY_SCRAPER_MODELS, null);
             if (json != null) {
+                mData = new ArrayList<>();
                 mData = mGson.fromJson(json, new TypeToken<ArrayList<BaseScraperModel>>() {
                 }.getType());
             }
@@ -57,6 +57,7 @@ public class ScraperModelUtils {
         temp.add(createTestModel2());
 
         syncCheckStateFromLocal(temp);
+        saveScaperModels(temp);
         callback.onSucceed(temp);
     }
 

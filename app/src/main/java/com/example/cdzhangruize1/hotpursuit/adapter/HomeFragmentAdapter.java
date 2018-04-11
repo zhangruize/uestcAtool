@@ -14,11 +14,13 @@ public class HomeFragmentAdapter extends FragmentPagerAdapter {//todo 未来考�
     private String mName;
     private Context context;
     private ArrayList<BaseScraperModel> mData;
+    private FragmentManager fragmentManager;
 
     public HomeFragmentAdapter(Context context, FragmentManager fm) {
         super(fm);
         this.context = context;
         mName = hashCode() + "";
+        fragmentManager = fm;
     }
 
     @Override
