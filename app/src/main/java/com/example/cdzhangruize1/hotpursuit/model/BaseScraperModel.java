@@ -17,6 +17,8 @@ public class BaseScraperModel {
     private ArrayList<String> links = new ArrayList<>();
     private ArrayList<MapRule> xpathMaps = new ArrayList<>();
 
+    private boolean subscribe = true;
+
     public BaseScraperModel(String name, String icon, int type) {
         this(name, icon, type, 0);
     }
@@ -44,8 +46,16 @@ public class BaseScraperModel {
         return xpathMaps;
     }
 
-    public int getType(){
+    public int getType() {
         return type;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getName(){
+        return name;
     }
 
     public static class MapRule {
@@ -70,5 +80,17 @@ public class BaseScraperModel {
 
     public int getFromIndex() {
         return fromIndex;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
+    }
+
+    public boolean isSubscribe() {
+        return subscribe;
+    }
+
+    public void setSubscribe(boolean subscribe) {
+        this.subscribe = subscribe;
     }
 }

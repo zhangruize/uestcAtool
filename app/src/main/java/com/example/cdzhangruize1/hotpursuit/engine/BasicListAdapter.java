@@ -2,6 +2,7 @@ package com.example.cdzhangruize1.hotpursuit.engine;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +45,7 @@ public class BasicListAdapter extends RecyclerView.Adapter<BasicListAdapter.Basi
             String value = itemData.get(field);
             if (value != null) {
                 if (view instanceof TextView) {
-                    ((TextView) view).setText(value);
+                    ((TextView) view).setText(Html.fromHtml(value));
                 } else if (view instanceof ImageView) {
                     Glide.with(holder.itemView).load(value).into((ImageView) view);
                 }

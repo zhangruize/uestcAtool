@@ -30,7 +30,7 @@
             android:paddingTop="10dp"
             android:textSize="19sp" />
 
-        <ImageView
+        <android.support.v7.widget.AppCompatImageView
             android:id="@+id/pic"
             android:layout_width="match_parent"
             android:layout_height="200dp"
