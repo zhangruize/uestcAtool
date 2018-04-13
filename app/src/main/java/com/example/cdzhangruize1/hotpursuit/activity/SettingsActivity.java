@@ -15,10 +15,20 @@ import java.util.ArrayList;
 /**
  * todo 需要考虑网络增加了新模型时，页面上的提醒，以及保存正确的订阅设置。
  */
-public class SettingsActivity extends AppCompatActivity implements ScraperModelUtils.Callback {
+public class SettingsActivity extends AppCompatActivity {
     RecyclerView mModelList;
     LinearLayoutManager mManager;
     SettingAdapter mAdapter;
+    ScraperModelUtils.Callback mCallback = new ScraperModelUtils.Callback() {
+        @Override
+        public void onSucceed(ArrayList<BaseScraperModel> data) {
+            mAdapter.dispatchData(data);
+        }
+
+        @Override
+        public void onFailed() {
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +39,7 @@ public class SettingsActivity extends AppCompatActivity implements ScraperModelU
         mAdapter = new SettingAdapter();
         mManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
 
-        ScraperModelUtils.getInstance(this).getRemoteScraperModels(this);
+        ScraperModelUtils.getInstance(this).getRemoteScraperModels(mCallback);
 
         mModelList.setAdapter(mAdapter);
         mModelList.setLayoutManager(mManager);
@@ -39,15 +49,5 @@ public class SettingsActivity extends AppCompatActivity implements ScraperModelU
     protected void onDestroy() {
         super.onDestroy();
         ScraperModelUtils.getInstance(this).saveScaperModels(mAdapter.getData());
-    }
-
-    @Override
-    public void onSucceed(ArrayList<BaseScraperModel> data) {
-        mAdapter.dispatchData(data);
-    }
-
-    @Override
-    public void onFailed() {
-
     }
 }

@@ -7,8 +7,8 @@ import java.util.ArrayList;
  * 先插入主键为最佳原则
  */
 public class BaseScraperModel {
-    public static final int MODEL_TYPE_SCRAPER = 1;
-    public static final int MODEL_TYPE_JSON = 2;
+    public static final transient int MODEL_TYPE_SCRAPER = 1;
+    public static final transient int MODEL_TYPE_JSON = 2;
 
     private String name;
     private String icon;
@@ -18,8 +18,8 @@ public class BaseScraperModel {
     private ArrayList<MapRule> xpathMaps = new ArrayList<>();
 
     //客户端使用变量，服务器不需要保存
-    private boolean subscribe = false;
-    private boolean isNew = false;//如果客户端之前没有此模型的订阅设置，则表明此模型是新的。
+    private transient boolean subscribe = false;
+    private transient boolean isNew = false;//如果客户端之前没有此模型的订阅设置，则表明此模型是新的。
 
     public BaseScraperModel(String name, String icon, int type, int fromIndex) {
         this.name = name;

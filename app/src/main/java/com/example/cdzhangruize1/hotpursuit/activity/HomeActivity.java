@@ -16,11 +16,34 @@ import com.example.cdzhangruize1.hotpursuit.utils.ScraperModelUtils;
 
 import java.util.ArrayList;
 
-public class HomeActivity extends AppCompatActivity implements ScraperModelUtils.Callback {
+public class HomeActivity extends AppCompatActivity {
     private static final int REQUEST_SETTING_ACTIVITY = 1;
     private HomeFragmentAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
     private TabLayout tabLayout;
+
+    ScraperModelUtils.Callback mCallback = new ScraperModelUtils.Callback() {
+        @Override
+        public void onSucceed(ArrayList<BaseScraperModel> data) {
+            if (data != null && data.size() > 0) {
+                for (int i = 0; i < data.size(); i++) {
+                    if (!data.get(i).isSubscribe()) {
+                        data.remove(i);
+                        i--;
+                    }
+                }
+            }
+            if (data == null || data.size() == 0) {
+                refreshTabs(data);
+            }
+            refreshTabs(data);
+            mSectionsPagerAdapter.dispatchData(data);
+        }
+
+        @Override
+        public void onFailed() {
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,9 +72,9 @@ public class HomeActivity extends AppCompatActivity implements ScraperModelUtils
     private void fetchData() {
         ArrayList<BaseScraperModel> localData = ScraperModelUtils.getInstance(this).getLocalScraperModels();
         if (localData == null) {
-            ScraperModelUtils.getInstance(this).getRemoteScraperModels(this);
+            ScraperModelUtils.getInstance(this).getRemoteScraperModels(mCallback);
         } else {
-            onSucceed(localData);
+            mCallback.onSucceed(localData);
         }
     }
 
@@ -76,24 +99,6 @@ public class HomeActivity extends AppCompatActivity implements ScraperModelUtils
         startActivityForResult(intent, REQUEST_SETTING_ACTIVITY);
     }
 
-    @Override
-    public void onSucceed(ArrayList<BaseScraperModel> data) {
-        if (data != null && data.size() > 0) {
-            for (int i = 0; i < data.size(); i++) {
-                if (!data.get(i).isSubscribe()) {
-                    data.remove(i);
-                    i--;
-                }
-            }
-        }
-        if (data == null || data.size() == 0) {
-            refreshTabs(data);
-        }
-        refreshTabs(data);
-        mSectionsPagerAdapter.dispatchData(data);
-
-    }
-
     private void refreshTabs(ArrayList<BaseScraperModel> data) {
         tabLayout.removeAllTabs();
         if (data != null) {
@@ -103,11 +108,6 @@ public class HomeActivity extends AppCompatActivity implements ScraperModelUtils
                 tabLayout.addTab(tab);
             }
         }
-    }
-
-    @Override
-    public void onFailed() {
-
     }
 
     @Override

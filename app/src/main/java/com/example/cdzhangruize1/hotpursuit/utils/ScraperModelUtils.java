@@ -1,26 +1,72 @@
 package com.example.cdzhangruize1.hotpursuit.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.cdzhangruize1.hotpursuit.constant.Constant;
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
+import com.example.cdzhangruize1.hotpursuit.pojo.JsonPojo;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 
-import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MODEL_TYPE_JSON;
-import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MODEL_TYPE_SCRAPER;
-import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.ELEMENT_TYPE_INNERHTML;
-import static com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel.MapRule.ELEMENT_TYPE_SRC;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class ScraperModelUtils {
     private static final String KEY_SCRAPER_MODELS = "scraper_models";
 
-    private Gson mGson = new Gson();
     private ArrayList<BaseScraperModel> mData;
+    private OkHttpClient mClient = new OkHttpClient();
+    private Gson mGson = new Gson();
     private SharedPreferences mPreferences;
+    private ObservableEmitter<Callback> mEmitter;
     private static ScraperModelUtils sInstance;
+
+    @SuppressLint("CheckResult")
+    private ScraperModelUtils() {
+        Observable.create(new ObservableOnSubscribe<Callback>() {
+            @Override
+            public void subscribe(ObservableEmitter<Callback> emitter) throws Exception {
+                mEmitter = emitter;
+            }
+        }).observeOn(Schedulers.computation()).map(new Function<Callback, Callback>() {
+            @Override
+            public Callback apply(Callback callback) throws Exception {
+                Request request = new Request.Builder().url(Constant.GET_MODELS).addHeader(Constant.APP_ID_NAME, Constant.APP_ID)
+                        .addHeader(Constant.APP_KEY_NAME, Constant.APP_KEY).build();
+                Response response = mClient.newCall(request).execute();
+                if (response.body() != null) {
+                    try {
+                        String json = response.body().string();
+                        JsonPojo pojo = mGson.fromJson(json, JsonPojo.class);
+                        callback.data = mGson.fromJson(pojo.json, new TypeToken<ArrayList<BaseScraperModel>>() {
+                        }.getType());
+                    } catch (Exception e) {
+                        callback.onFailed();
+                    }
+                }
+                return callback;
+            }
+        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<Callback>() {
+            @Override
+            public void accept(Callback callback) throws Exception {
+                syncCheckStateFromLocal(callback.data);
+                saveScaperModels(callback.data);
+                callback.onSucceed(callback.data);
+            }
+        });
+    }
 
     public static ScraperModelUtils getInstance(Context context) {
         if (sInstance == null) {
@@ -51,34 +97,8 @@ public class ScraperModelUtils {
         editor.apply();
     }
 
-    public void getRemoteScraperModels(Callback callback) {        // todo 未来需要从网络端获取模型数据
-        ArrayList<BaseScraperModel> temp = new ArrayList<>();
-        temp.add(createTestModel1());
-        temp.add(createTestModel2());
-
-        syncCheckStateFromLocal(temp);
-        saveScaperModels(temp);
-        callback.onSucceed(temp);
-    }
-
-    private BaseScraperModel createTestModel1() {
-        BaseScraperModel model = new BaseScraperModel("文化活动", null, MODEL_TYPE_SCRAPER, 1);
-        model.addLink("http://www.new1.uestc.edu.cn/?n=UestcNews.Front.Category.Page&CatId=67");
-        model.setIcon("https://image.flaticon.com/sprites/new_packs/148705-essential-collection.png");
-        model.addMapRule(new BaseScraperModel.MapRule("#Degas_news_list > ul > li:nth-child($) > h3 > a", "title", ELEMENT_TYPE_INNERHTML));
-        model.addMapRule(new BaseScraperModel.MapRule("#Degas_news_list > ul > li:nth-child($) > p", "message", ELEMENT_TYPE_INNERHTML));
-        model.addMapRule(new BaseScraperModel.MapRule("#Degas_news_list > ul > li:nth-child($) > a > img", "pic", ELEMENT_TYPE_SRC));
-        return model;
-    }
-
-    private BaseScraperModel createTestModel2() {
-        BaseScraperModel model = new BaseScraperModel("微博", null, MODEL_TYPE_JSON, 0);
-        model.addLink("https://m.weibo.cn/api/container/getIndex?containerid=1076031793285524");
-        model.setIcon("https://image.flaticon.com/sprites/new_packs/148705-essential-collection.png");
-        model.addMapRule(new BaseScraperModel.MapRule("['data'].['cards'][$]['mblog']['user']['screen_name']", "title"));
-        model.addMapRule(new BaseScraperModel.MapRule("['data'].['cards'][$]['mblog']['text']", "message"));
-        model.addMapRule(new BaseScraperModel.MapRule("['data'].['cards'][$]['mblog']['original_pic']", "pic"));
-        return model;
+    public void getRemoteScraperModels(Callback callback) {
+        mEmitter.onNext(callback);
     }
 
     private void syncCheckStateFromLocal(ArrayList<BaseScraperModel> fromRemote) {
@@ -107,9 +127,11 @@ public class ScraperModelUtils {
         }
     }
 
-    public interface Callback {
-        void onSucceed(ArrayList<BaseScraperModel> data);
+    public static abstract class Callback {
+        ArrayList<BaseScraperModel> data;
 
-        void onFailed();
+        public abstract void onSucceed(ArrayList<BaseScraperModel> data);
+
+        public abstract void onFailed();
     }
 }
