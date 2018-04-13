@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.example.cdzhangruize1.hotpursuit.R;
 import com.example.cdzhangruize1.hotpursuit.adapter.HomeFragmentAdapter;
@@ -16,8 +17,9 @@ import com.example.cdzhangruize1.hotpursuit.utils.ScraperModelUtils;
 
 import java.util.ArrayList;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int REQUEST_SETTING_ACTIVITY = 1;
+    private View noModelLayout;
     private HomeFragmentAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
     private TabLayout tabLayout;
@@ -34,7 +36,9 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
             if (data == null || data.size() == 0) {
-                //todo 提示用户选择模块
+                noModelLayout.setVisibility(View.VISIBLE);
+            } else {
+                noModelLayout.setVisibility(View.GONE);
             }
             refreshTabs(data);
             mSectionsPagerAdapter.dispatchData(data);
@@ -64,6 +68,8 @@ public class HomeActivity extends AppCompatActivity {
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
         tabLayout = findViewById(R.id.homeTabLayout);
+        noModelLayout = findViewById(R.id.noModelLayout);
+        noModelLayout.setVisibility(View.GONE);
 
         mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
@@ -115,6 +121,15 @@ public class HomeActivity extends AppCompatActivity {
         switch (requestCode) {
             case REQUEST_SETTING_ACTIVITY:
                 fetchData();
+                break;
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.noModelLayout:
+                toSettingActivity();
                 break;
         }
     }
