@@ -27,6 +27,7 @@ public class BasicFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     SwipeRefreshLayout mSwipeLayout;
     ViewGroup mListContainer;
     LoadTask mTask;
+    RecyclerView mListView;
 
     public BasicFragment() {
     }
@@ -34,7 +35,6 @@ public class BasicFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        onRefresh();
     }
 
     @Nullable
@@ -52,7 +52,14 @@ public class BasicFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     }
 
     @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        onRefresh();
+    }
+
+    @Override
     public void onRefresh() {
+        mSwipeLayout.setVisibility(View.VISIBLE);
+        mSwipeLayout.setRefreshing(true);
         if (mTask != null) {
             WebEngine.getInstance().load(mTask);
         }
@@ -61,7 +68,15 @@ public class BasicFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public void setModel(BaseScraperModel model, Context context) {
         if (model != null) {
             if (mTask != null) {
-                mTask.setModel(model);
+                if (!mTask.getModel().getName().equals(model.getName())) {//如果新的模型和上一个不一样
+                    if (mListView != null) {//隐藏列表。防止其他问题
+                        mListView.setVisibility(View.GONE);
+                    }
+                    mTask.setModel(model);
+                    onRefresh();
+                } else {
+                    mSwipeLayout.setVisibility(View.VISIBLE);//如果新的模型和之前的模型相同。则确保可见性。
+                }
             } else {
                 mTask = new LoadTask(model, this, ListEngine.getInstance(), context);
             }
@@ -70,16 +85,16 @@ public class BasicFragment extends Fragment implements SwipeRefreshLayout.OnRefr
 
     @Override
     public void onSucceed(RecyclerView view) {
+        mListView = view;
         mSwipeLayout.setRefreshing(false);
         mFailedLayout.setVisibility(View.GONE);
         if (view != null) {
-            if (view.getParent() == null) {
+            if (view.getParent() == null) {//如果还没有添加到容器里
                 mListContainer.addView(view, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            } else {
+            } else {//已经被添加到容器里，此时更新列表数据
                 view.getAdapter().notifyDataSetChanged();
             }
-        } else {
-            //todo error
+            mListView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -87,5 +102,9 @@ public class BasicFragment extends Fragment implements SwipeRefreshLayout.OnRefr
     public void onFailed() {
         mSwipeLayout.setRefreshing(false);
         mFailedLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void reset() {
+        mSwipeLayout.setVisibility(View.GONE);
     }
 }

@@ -26,7 +26,7 @@ public class HomeFragmentAdapter extends FragmentPagerAdapter {//todo 未来考�
     @Override
     public Fragment getItem(int position) {
         BasicFragment fragment = (BasicFragment) Fragment.instantiate(context, BasicFragment.class.getName());
-        fragment.setModel(mData.get(position),context);
+        fragment.setModel(mData.get(position), context);
         return fragment;
     }
 
@@ -37,6 +37,20 @@ public class HomeFragmentAdapter extends FragmentPagerAdapter {//todo 未来考�
 
     public void dispatchData(ArrayList<BaseScraperModel> data) {
         mData = data;
+        if (data != null && data.size() > 0) {
+            for (int i = 0; i < data.size() && i < fragmentManager.getFragments().size(); i++) {
+                Fragment f = fragmentManager.getFragments().get(i);
+                if (f != null && f instanceof BasicFragment) {
+                    BasicFragment bf = (BasicFragment) f;
+                    bf.setModel(mData.get(i), context);
+                }
+            }
+        } else {
+            for (Fragment f : fragmentManager.getFragments()) {
+                BasicFragment bf = (BasicFragment) f;
+                bf.reset();
+            }
+        }
         notifyDataSetChanged();
     }
 }

@@ -18,7 +18,7 @@ public class BaseScraperModel {
     private ArrayList<MapRule> xpathMaps = new ArrayList<>();
 
     //客户端使用变量，服务器不需要保存
-    private transient boolean subscribe = false;
+    private boolean subscribe = false;
     private transient boolean isNew = false;//如果客户端之前没有此模型的订阅设置，则表明此模型是新的。
 
     public BaseScraperModel(String name, String icon, int type, int fromIndex) {

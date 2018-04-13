@@ -34,7 +34,7 @@ public class HomeActivity extends AppCompatActivity {
                 }
             }
             if (data == null || data.size() == 0) {
-                refreshTabs(data);
+                //todo 提示用户选择模块
             }
             refreshTabs(data);
             mSectionsPagerAdapter.dispatchData(data);
