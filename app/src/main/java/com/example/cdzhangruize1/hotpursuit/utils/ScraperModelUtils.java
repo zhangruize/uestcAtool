@@ -4,68 +4,28 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.example.cdzhangruize1.hotpursuit.constant.Constant;
+import com.example.cdzhangruize1.hotpursuit.callback.BaseCallback;
+import com.example.cdzhangruize1.hotpursuit.callback.ScraperModelListCallback;
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
-import com.example.cdzhangruize1.hotpursuit.pojo.JsonPojo;
+import com.example.cdzhangruize1.hotpursuit.observable.BasicObservable;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import static com.example.cdzhangruize1.hotpursuit.constant.Constant.GET_MODELS;
+import static com.example.cdzhangruize1.hotpursuit.constant.Constant.KEY_SCRAPER_MODELS;
 
 public class ScraperModelUtils {
-    private static final String KEY_SCRAPER_MODELS = "scraper_models";
-
+    private final BasicObservable basicObservable;
     private ArrayList<BaseScraperModel> mData;
-    private OkHttpClient mClient = new OkHttpClient();
     private Gson mGson = new Gson();
     private SharedPreferences mPreferences;
-    private ObservableEmitter<Callback> mEmitter;
     private static ScraperModelUtils sInstance;
 
     @SuppressLint("CheckResult")
     private ScraperModelUtils() {
-        Observable.create(new ObservableOnSubscribe<Callback>() {
-            @Override
-            public void subscribe(ObservableEmitter<Callback> emitter) throws Exception {
-                mEmitter = emitter;
-            }
-        }).observeOn(Schedulers.computation()).map(new Function<Callback, Callback>() {
-            @Override
-            public Callback apply(Callback callback) throws Exception {
-                Request request = new Request.Builder().url(Constant.GET_MODELS).addHeader(Constant.APP_ID_NAME, Constant.APP_ID)
-                        .addHeader(Constant.APP_KEY_NAME, Constant.APP_KEY).build();
-                Response response = mClient.newCall(request).execute();
-                if (response.body() != null) {
-                    try {
-                        String json = response.body().string();
-                        JsonPojo pojo = mGson.fromJson(json, JsonPojo.class);
-                        callback.data = mGson.fromJson(pojo.json, new TypeToken<ArrayList<BaseScraperModel>>() {
-                        }.getType());
-                    } catch (Exception e) {
-                        callback.onFailed();
-                    }
-                }
-                return callback;
-            }
-        }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Consumer<Callback>() {
-            @Override
-            public void accept(Callback callback) throws Exception {
-                syncCheckStateFromLocal(callback.data);
-                saveScaperModels(callback.data);
-                callback.onSucceed(callback.data);
-            }
-        });
+        basicObservable = new BasicObservable(RequestUtils.leanCloud(GET_MODELS));
     }
 
     public static ScraperModelUtils getInstance(Context context) {
@@ -89,7 +49,7 @@ public class ScraperModelUtils {
         return mData;
     }
 
-    public void saveScaperModels(ArrayList<BaseScraperModel> data) {
+    public void saveScraperModels(ArrayList<BaseScraperModel> data) {
         mData = data;
         String json = mGson.toJson(data);
         SharedPreferences.Editor editor = mPreferences.edit();
@@ -97,8 +57,24 @@ public class ScraperModelUtils {
         editor.apply();
     }
 
-    public void getRemoteScraperModels(Callback callback) {
-        mEmitter.onNext(callback);
+    public void getRemoteScraperModels(ScraperModelListCallback callback) {
+        basicObservable.getEmitter().onNext(wrapCallback(callback));
+    }
+
+    private BaseCallback wrapCallback(final ScraperModelListCallback callback) {
+        return new ScraperModelListCallback() {
+            @Override
+            public void onFailed(Exception e) {
+                callback.onFailed(e);
+            }
+
+            @Override
+            public void onSucceed(ArrayList<BaseScraperModel> data) {
+                syncCheckStateFromLocal(data);
+                saveScraperModels(data);
+                callback.onSucceed(data);
+            }
+        };
     }
 
     private void syncCheckStateFromLocal(ArrayList<BaseScraperModel> fromRemote) {
@@ -125,13 +101,5 @@ public class ScraperModelUtils {
                 }
             }
         }
-    }
-
-    public static abstract class Callback {
-        ArrayList<BaseScraperModel> data;
-
-        public abstract void onSucceed(ArrayList<BaseScraperModel> data);
-
-        public abstract void onFailed();
     }
 }

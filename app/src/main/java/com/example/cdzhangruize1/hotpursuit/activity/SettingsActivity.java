@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 
 import com.example.cdzhangruize1.hotpursuit.R;
 import com.example.cdzhangruize1.hotpursuit.adapter.SettingAdapter;
+import com.example.cdzhangruize1.hotpursuit.callback.ScraperModelListCallback;
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
 import com.example.cdzhangruize1.hotpursuit.utils.ScraperModelUtils;
 
@@ -19,14 +20,14 @@ public class SettingsActivity extends AppCompatActivity {
     RecyclerView mModelList;
     LinearLayoutManager mManager;
     SettingAdapter mAdapter;
-    ScraperModelUtils.Callback mCallback = new ScraperModelUtils.Callback() {
+    ScraperModelListCallback mCallback = new ScraperModelListCallback() {
         @Override
         public void onSucceed(ArrayList<BaseScraperModel> data) {
             mAdapter.dispatchData(data);
         }
 
         @Override
-        public void onFailed() {
+        public void onFailed(Exception e) {
         }
     };
 
@@ -48,6 +49,6 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ScraperModelUtils.getInstance(this).saveScaperModels(mAdapter.getData());
+        ScraperModelUtils.getInstance(this).saveScraperModels(mAdapter.getData());
     }
 }

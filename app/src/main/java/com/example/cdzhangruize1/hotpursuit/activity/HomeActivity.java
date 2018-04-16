@@ -12,6 +12,7 @@ import android.view.View;
 
 import com.example.cdzhangruize1.hotpursuit.R;
 import com.example.cdzhangruize1.hotpursuit.adapter.HomeFragmentAdapter;
+import com.example.cdzhangruize1.hotpursuit.callback.ScraperModelListCallback;
 import com.example.cdzhangruize1.hotpursuit.model.BaseScraperModel;
 import com.example.cdzhangruize1.hotpursuit.utils.ScraperModelUtils;
 
@@ -24,7 +25,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     private ViewPager mViewPager;
     private TabLayout tabLayout;
 
-    ScraperModelUtils.Callback mCallback = new ScraperModelUtils.Callback() {
+    ScraperModelListCallback mCallback = new ScraperModelListCallback() {
         @Override
         public void onSucceed(ArrayList<BaseScraperModel> data) {
             if (data != null && data.size() > 0) {
@@ -40,12 +41,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 noModelLayout.setVisibility(View.GONE);
             }
-            refreshTabs(data);
+            resetTabs(data);
             mSectionsPagerAdapter.dispatchData(data);
         }
 
         @Override
-        public void onFailed() {
+        public void onFailed(Exception e) {
         }
     };
 
@@ -55,7 +56,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_home);
 
         initView();
-        fetchData();
+        fetchModels();
+        checkVersion();
     }
 
     private void initView() {
@@ -75,13 +77,16 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         tabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager));
     }
 
-    private void fetchData() {
+    private void fetchModels() {
         ArrayList<BaseScraperModel> localData = ScraperModelUtils.getInstance(this).getLocalScraperModels();
         if (localData == null) {
             ScraperModelUtils.getInstance(this).getRemoteScraperModels(mCallback);
         } else {
             mCallback.onSucceed(localData);
         }
+    }
+
+    private void checkVersion() {
     }
 
     @Override
@@ -105,7 +110,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(intent, REQUEST_SETTING_ACTIVITY);
     }
 
-    private void refreshTabs(ArrayList<BaseScraperModel> data) {
+    private void resetTabs(ArrayList<BaseScraperModel> data) {
         tabLayout.removeAllTabs();
         if (data != null) {
             for (BaseScraperModel model : data) {
@@ -120,7 +125,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_SETTING_ACTIVITY:
-                fetchData();
+                fetchModels();
                 break;
         }
     }

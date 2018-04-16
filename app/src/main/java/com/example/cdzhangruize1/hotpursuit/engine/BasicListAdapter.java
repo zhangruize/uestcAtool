@@ -19,7 +19,7 @@ public class BasicListAdapter extends RecyclerView.Adapter<BasicListAdapter.Basi
     private ArrayList<HashMap<String, String>> mData;
     private BaseListStyle mStyle;
 
-    public BasicListAdapter(BaseListStyle style) {//应当确保此style和将要传入的mData兼容
+    BasicListAdapter(BaseListStyle style) {//应当确保此style和将要传入的mData兼容
         this.mStyle = style;
     }
 
